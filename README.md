@@ -1,6 +1,11 @@
 # Helium
 Analyse beacons by geographical area
 
+## Download
+https://github.com/V999TEC/HeliumBeacons/blob/main/download/Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+
+## Parameters
+
 Time should be constrained by specifying one or two zulu time(s) in the format YYYY-MM-DDThh:mm:ss.123456789Z
 
 Specify a single time to imply data "after"
@@ -27,7 +32,6 @@ or one or more three-word-addresses
 
 three-word-address (further three-word-addresses)
 
- 
 ## Main class:
 uk.co.myzen.atoz.helium.Explore
 
