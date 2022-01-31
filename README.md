@@ -63,3 +63,10 @@ Chronological summary of sent Beacons between 2022-01-31 08:00:00 and 2022-01-31
 2022-01-31T12:43:53.230298368Z is the mean beacon time sent from helpful-iris-moth/Swindon witnessed by 1 on channel 3 (867.7)
 2022-01-31T13:24:15.640197120Z is the mean beacon time sent from dancing-grape-toad/Swindon witnessed by 1 on channel 1 (867.3)
 ```
+
+
+## RecentAddresses.properties
+If the jar runs to completion it will update RecentAddresses.properties in the current directory
+
+This property file acts as a cache to speed up subsequent invocations
+
