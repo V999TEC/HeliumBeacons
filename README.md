@@ -66,7 +66,7 @@ Chronological summary of sent Beacons between 2022-01-31 08:00:00 and 2022-01-31
 
 
 ## RecentAddresses.properties
-If the jar runs to completion it will update RecentAddresses.properties in the current directory
+If the jar runs to completion it will display RecentAddresses.properties created in the current directory
 
-This property file acts as a cache to speed up subsequent invocations
+This property file acts as a cache to speed up execution on subsequent invocations
 
