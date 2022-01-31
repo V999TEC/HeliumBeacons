@@ -9,17 +9,21 @@ Specify a range of times by a pair of zulu times i.e., "after" and "before"
 
 Times must always be the last parameters. Preceed times by...
 
-Specifing a city or area (known to Helium)
+specifing a city or area (known to Helium)
 
-or
+or define a circular area of known radius
 
 lat=latitude long=longitude distance=metres (time (time))
 
-or
+or define a rectangle using south-west and north-east coordinates
+
+swlat=50.56734 swlon=-1.58319 nelat=50.76640 nelon=-1.04253
+
+or a Helium 'hex' identifier (typcally a hexagonal zone about 1km across )
 
 a single hex identifier
 
-or
+or one or more three-word-addresses
 
 three-word-address (further three-word-addresses)
 
