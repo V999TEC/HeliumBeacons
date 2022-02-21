@@ -6,6 +6,9 @@ See [RecentAddresses.properties](/RecentAddresses.properties) for an example of 
 The program arguments used were ```Swindon 2022-02-21T00:00:00.000000000Z```
 and the test was run around 10:49:06 on the same date
 
+This is the [Chronological summary of sent Beacons](/BeaconExtract.txt) extracted from the file linked above
+and shows over 40 beacons occured in the Swindon area before 9am.
+At least one hotspot beaconed three times in that period.
 
 
 ## Download
@@ -13,7 +16,7 @@ https://github.com/V999TEC/HeliumBeacons/blob/main/download/Helium-0.0.1-SNAPSHO
 
 ## Parameters
 
-Time should be constrained by specifying one or two zulu time(s) in the format YYYY-MM-DDThh:mm:ss.123456789Z
+Time should be constrained by specifying one or two zulu time(s) in the format ```YYYY-MM-DDThh:mm:ss.123456789Z```
 
 Specify a single time to imply data "after"
 
@@ -25,11 +28,11 @@ specifing a city or area (known to Helium)
 
 or define a circular area of known radius
 
-lat=latitude long=longitude distance=metres (time (time))
+```lat=latitude long=longitude distance=metres (time (time))```
 
 or define a rectangle using south-west and north-east coordinates
 
-swlat=50.56734 swlon=-1.58319 nelat=50.76640 nelon=-1.04253
+```swlat=50.56734 swlon=-1.58319 nelat=50.76640 nelon=-1.04253```
 
 or a Helium 'hex' identifier (typcally a hexagonal zone about 1km across )
 
@@ -50,19 +53,19 @@ https://github.com/V999TEC/Utility
 Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 
 ## command line execution
-java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar [parameters]
+```java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar [parameters]```
 
-java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar 881958a095fffff
+```java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar 881958a095fffff```
 
 ### More example parameters
 
-lat=51.52304 long=-0.17050 distance=3750  2022-01-25T11:00:00.000000000Z 2022-01-26T13:00:00.000000000Z
+```lat=51.52304 long=-0.17050 distance=3750  2022-01-25T11:00:00.000000000Z 2022-01-26T13:00:00.000000000Z```
 
-Swindon
+```Swindon```
 
-long-felt-grasshopper
+```long-felt-grasshopper```
 
-881958a717fffff 2022-01-31T08:00:00.000000000Z
+```881958a717fffff 2022-01-31T08:00:00.000000000Z```
 
 ### Example extract of output:
 
