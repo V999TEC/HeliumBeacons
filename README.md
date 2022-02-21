@@ -1,6 +1,13 @@
 # Helium
 Analyse beacons by geographical area
 
+See [RecentAddresses.properties](/RecentAddresses.properties) for an example of the output
+
+The program arguments used were ```Swindon 2022-02-21T00:00:00.000000000Z```
+and the test was run around 10:49:06 on the same date
+
+
+
 ## Download
 https://github.com/V999TEC/HeliumBeacons/blob/main/download/Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar
 
