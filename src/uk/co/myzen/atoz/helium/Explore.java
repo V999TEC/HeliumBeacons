@@ -22,6 +22,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Properties;
 import java.util.Set;
+import java.util.TreeSet;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
 import com.fasterxml.jackson.databind.DeserializationFeature;
@@ -44,8 +45,11 @@ import uk.co.myzen.atoz.utility.Haversine;
 
 public class Explore {
 
-	public final static String API = "https://api.helium.io/v1/"; // alternatives exist:
-																	// https://helium-api.stakejoy.com/v1/
+	public final static String[] API = { "https://helium-api.stakejoy.com/v1/", "https://api.helium.io/v1/" };
+	// https://api.helium.io/v1/
+	// https://helium-api.stakejoy.com/v1/
+
+	public static int API_INDEX = 1;
 
 	public final static String resourcesCache = "cache.properties";
 
@@ -67,13 +71,15 @@ public class Explore {
 	// resources/cache.properties &
 	// RecentAddresses.properties
 
+	private static Map<String, TreeSet<Long>> beaconEvents = new HashMap<String, TreeSet<Long>>();
+
 	public static Explore instance;
 
 	private final ObjectMapper mapper;
 
 	private final Haversine h;
 
-	private long millis = 1000;
+	private long millis = 5000;
 
 	private Map<String, String> cities = null;
 
@@ -507,8 +513,8 @@ public class Explore {
 		int hotspotsSize = lookups.size() - cities.size();
 
 		System.out.println("\nThere are " + hotspotsSize + " hotspots & " + cities.size()
-				+ " city/areas currently cached in the resources/cache.properties (including " + exclusions.size()
-				+ " exclusions & " + constraints.size() + " constraints)\n");
+				+ " city/areas currently cached (including " + exclusions.size() + " exclusions & " + constraints.size()
+				+ " constraints)\n");
 
 		for (String exclusion : exclusions) {
 
@@ -1100,6 +1106,25 @@ public class Explore {
 
 					Long meanTime = fairMeanTime(timestamps, sd, minUse);
 
+					// capture some timing data related to the current beaconer
+
+					TreeSet<Long> beaconTimings = null;
+
+					if (beaconEvents.containsKey(infoChallengee)) {
+
+						beaconTimings = beaconEvents.get(infoChallengee);
+					} else {
+
+						beaconTimings = new TreeSet<Long>();
+
+						beaconEvents.put(infoChallengee, beaconTimings);
+					}
+
+					if (!beaconTimings.contains(meanTime)) {
+
+						beaconTimings.add(meanTime);
+					}
+
 					String meanZulu = timeAsZulu(meanTime.longValue());
 
 					String text = "is the mean beacon time sent from " + infoChallengee + " witnessed by " + included
@@ -1110,6 +1135,7 @@ public class Explore {
 					summarySent.put(mean, text);
 
 					System.out.println("\n\t\t\t" + meanZulu + "\t" + text);
+
 				}
 
 				if (timeTooOld) {
@@ -1133,6 +1159,29 @@ public class Explore {
 
 		loadPreviousCache(null); // this will do System.err.println() for each entry
 
+	}
+
+	private long estimateAverageRepeatTime(TreeSet<Long> beaconTimings) {
+
+		long result = 0;
+
+		int size = beaconTimings.size();
+
+		if (size > 1) {
+
+			// calculate delays between first & last timestamps
+
+			long first = beaconTimings.first();
+
+			long last = beaconTimings.last();
+
+			double est = ((last - first) / (size - 1)) / 1000000000;
+
+			result = Double.valueOf(est).longValue();
+
+		}
+
+		return result;
 	}
 
 	private static void loadPreviousCache(Properties properties) throws IOException {
@@ -1302,49 +1351,6 @@ public class Explore {
 		return meanTime.longValue();
 	}
 
-	private void displaySendersAndWitnesses(Map<Instant, String> summarySent, Map<Instant, String> summaryWitnessed,
-			String timeRange) {
-
-		System.out.println("\nChronological summary of witnessed beacons " + timeRange + "\n");
-
-		List<Instant> keyList = new ArrayList<Instant>(summaryWitnessed.size());
-
-		for (Instant key : summaryWitnessed.keySet()) {
-
-			keyList.add(key);
-		}
-
-		Collections.sort(keyList);
-
-		for (Instant key : keyList) {
-
-			// is this instant in the sent map?
-
-			String senderInfo = "";
-
-			if (summarySent.containsKey(key)) {
-
-				String value = summarySent.get(key);
-
-				final int beginIndex = 24;
-
-				int endIndex = value.indexOf("and witnessed by", beginIndex);
-
-				senderInfo = "\t" + value.substring(beginIndex, endIndex);
-			}
-
-			long epochSeconds = key.getEpochSecond();
-
-			int nano = key.getNano();
-
-			long nanoSeconds = 1000000000 * epochSeconds + nano;
-
-			String time = timeAsZulu(nanoSeconds);
-
-			System.out.println(time + " " + summaryWitnessed.get(key) + senderInfo);
-		}
-	}
-
 	private void displaySummary(String text, Map<Instant, String> summary, String timeRange) {
 
 		System.out.println("\nChronological summary of " + text + " " + timeRange + "\n");
@@ -1366,9 +1372,34 @@ public class Explore {
 
 			long nanoSeconds = 1000000000 * epochSeconds + nano;
 
+			String textSummary = summary.get(key);
+
+			int beginIndex = 5 + textSummary.indexOf("from ");
+
+			int endIndex = textSummary.indexOf(" witnessed");
+
+			String beaconer = textSummary.substring(beginIndex, endIndex);
+
+			TreeSet<Long> beaconSet = beaconEvents.get(beaconer);
+
+			long averagePeriod = estimateAverageRepeatTime(beaconSet);
+
+			int index = 0;
+
+			for (Long value : beaconSet) {
+
+				index++;
+
+				if (value == nanoSeconds) {
+
+					break;
+				}
+			}
+
 			String time = timeAsZulu(nanoSeconds);
 
-			System.out.println(time + " " + summary.get(key));
+			System.out.println(time + " " + textSummary + "\tPeriod average: " + averagePeriod + " seconds (" + index
+					+ "/" + beaconSet.size() + ")");
 		}
 
 	}
@@ -1432,7 +1463,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "challenges");
+		sb.append(API[API_INDEX] + "challenges");
 
 		if (null != cursor && 0 != cursor.trim().length()) {
 
@@ -1444,7 +1475,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ActivityCursor result = mapper.readValue(json, ActivityCursor.class);
+		ActivityCursor result = "".equals(json) ? null : mapper.readValue(json, ActivityCursor.class);
 
 		return result;
 	}
@@ -1454,7 +1485,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/");
+		sb.append(API[API_INDEX] + "hotspots/");
 		sb.append(address);
 		sb.append("/challenges");
 
@@ -1530,7 +1561,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ActivityCursor result = mapper.readValue(json, ActivityCursor.class);
+		ActivityCursor result = "".equals(json) ? null : mapper.readValue(json, ActivityCursor.class);
 
 		return result;
 	}
@@ -1541,6 +1572,11 @@ public class Explore {
 		List<ParameterMap> result = new ArrayList<ParameterMap>();
 
 		ActivityCursor ac = queryHotspotChallenges(address, null, minTime, maxTime, null);
+
+		if (null == ac) {
+
+			return result;
+		}
 
 		String cursor = ac.getCursor();
 
@@ -1582,14 +1618,14 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "locations/");
+		sb.append(API[API_INDEX] + "locations/");
 		sb.append(location);
 
 		URL url = new URL(sb.toString());
 
 		String json = getRequest(url);
 
-		Location result = mapper.readValue(json, Location.class);
+		Location result = "".equals(json) ? null : mapper.readValue(json, Location.class);
 
 		return result;
 	}
@@ -1619,14 +1655,14 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "cities?search=");
+		sb.append(API[API_INDEX] + "cities?search=");
 		sb.append(name);
 
 		URL url = new URL(sb.toString());
 
 		String json = getRequest(url);
 
-		ManyCities result = mapper.readValue(json, ManyCities.class);
+		ManyCities result = "".equals(json) ? null : mapper.readValue(json, ManyCities.class);
 
 		return result;
 	}
@@ -1641,14 +1677,14 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/name/");
+		sb.append(API[API_INDEX] + "hotspots/name/");
 		sb.append(name);
 
 		URL url = new URL(sb.toString());
 
 		String json = getRequest(url);
 
-		ManyHotspots result = mapper.readValue(json, ManyHotspots.class);
+		ManyHotspots result = "".equals(json) ? null : mapper.readValue(json, ManyHotspots.class);
 
 		return result;
 
@@ -1658,14 +1694,14 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/");
+		sb.append(API[API_INDEX] + "hotspots/");
 		sb.append(address);
 
 		URL url = new URL(sb.toString());
 
 		String json = getRequest(url);
 
-		DataHotSpot result = mapper.readValue(json, DataHotSpot.class);
+		DataHotSpot result = "".contentEquals(json) ? null : mapper.readValue(json, DataHotSpot.class);
 
 		return result;
 
@@ -1675,14 +1711,14 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/hex/");
+		sb.append(API[API_INDEX] + "hotspots/hex/");
 		sb.append(hexH3Index);
 
 		URL url = new URL(sb.toString());
 
 		String json = getRequest(url);
 
-		ManyHotspots result = mapper.readValue(json, ManyHotspots.class);
+		ManyHotspots result = "".equals(json) ? null : mapper.readValue(json, ManyHotspots.class);
 
 		return result;
 
@@ -1692,7 +1728,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "cities/");
+		sb.append(API[API_INDEX] + "cities/");
 		sb.append(cityId);
 		sb.append("/hotspots");
 
@@ -1700,7 +1736,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ManyHotspots result = mapper.readValue(json, ManyHotspots.class);
+		ManyHotspots result = "".equals(json) ? null : mapper.readValue(json, ManyHotspots.class);
 
 		return result;
 
@@ -1711,7 +1747,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/location/box?swlat=");
+		sb.append(API[API_INDEX] + "hotspots/location/box?swlat=");
 		sb.append(latSouthWestCorner);
 		sb.append("&swlon=");
 		sb.append(lonSouthWestCorner);
@@ -1724,7 +1760,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ManyHotspots manyHotspots = mapper.readValue(json, ManyHotspots.class);
+		ManyHotspots manyHotspots = "".equals(json) ? null : mapper.readValue(json, ManyHotspots.class);
 
 		return manyHotspots;
 	}
@@ -1734,7 +1770,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/location/distance?lat=");
+		sb.append(API[API_INDEX] + "hotspots/location/distance?lat=");
 		sb.append(latCentre);
 		sb.append("&lon=");
 		sb.append(lonCentre);
@@ -1745,7 +1781,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ManyHotspots manyHotspots = mapper.readValue(json, ManyHotspots.class);
+		ManyHotspots manyHotspots = "".equals(json) ? null : mapper.readValue(json, ManyHotspots.class);
 
 		return manyHotspots;
 	}
@@ -1754,7 +1790,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/");
+		sb.append(API[API_INDEX] + "hotspots/");
 		sb.append(hotspot);
 		sb.append("/activity");
 
@@ -1762,7 +1798,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ActivityCursor activityCuror = mapper.readValue(json, ActivityCursor.class);
+		ActivityCursor activityCuror = "".equals(json) ? null : mapper.readValue(json, ActivityCursor.class);
 
 		return activityCuror.getCursor();
 	}
@@ -1771,7 +1807,7 @@ public class Explore {
 
 		StringBuilder sb = new StringBuilder();
 
-		sb.append(API + "hotspots/");
+		sb.append(API[API_INDEX] + "hotspots/");
 		sb.append(hotspot);
 		sb.append("/activity");
 		sb.append("?cursor=");
@@ -1781,7 +1817,7 @@ public class Explore {
 
 		String json = getRequest(url);
 
-		ActivityCursor activityCursor = mapper.readValue(json, ActivityCursor.class);
+		ActivityCursor activityCursor = "".equals(json) ? null : mapper.readValue(json, ActivityCursor.class);
 
 		List<ParameterMap> result = activityCursor.getData();
 
@@ -1825,20 +1861,38 @@ public class Explore {
 			millis -= 100;
 		}
 
-		BufferedReader in = new BufferedReader(new InputStreamReader(con.getInputStream()));
-		String inputLine;
-		StringBuffer content = new StringBuffer();
+		String json = "";
 
-		while ((inputLine = in.readLine()) != null) {
+		BufferedReader in = null;
 
-			content.append(inputLine);
+		try {
+
+			in = new BufferedReader(new InputStreamReader(con.getInputStream()));
+
+			String inputLine;
+			StringBuffer content = new StringBuffer();
+
+			while ((inputLine = in.readLine()) != null) {
+
+				content.append(inputLine);
+			}
+
+			json = content.toString();
+
+		} catch (IOException e) {
+
+			e.printStackTrace();
 		}
 
-		in.close();
+		if (null != in) {
 
-		con.disconnect();
+			in.close();
+		}
 
-		String json = content.toString();
+		if (null != con) {
+
+			con.disconnect();
+		}
 
 		return json;
 	}
