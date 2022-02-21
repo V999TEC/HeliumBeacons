@@ -6,6 +6,9 @@ See [RecentAddresses.properties](/RecentAddresses.properties) for an example of 
 The program arguments used were ```Swindon 2022-02-21T00:00:00.000000000Z```
 and the test was run around 10:49:06 on the same date
 
+This is the [Chronological summary of sent Beacons](/BeaconExtract.txt) extracted from the file linked above
+and shows over 40 beacons occured in the Swindon area before 9am.
+At least one hotspot beaconed three times in that period.
 
 
 ## Download
