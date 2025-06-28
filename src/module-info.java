@@ -14,5 +14,5 @@ module Helium {
 	requires com.fasterxml.jackson.databind;
 	requires com.fasterxml.jackson.core;
 
-	requires Utility;
+	requires Util;
 }
