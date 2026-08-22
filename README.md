@@ -54,12 +54,12 @@ https://github.com/V999TEC/Utility
 
 
 ## jar containing all dependencies 
-Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+Helium-0.0.n-SNAPSHOT-jar-with-dependencies.jar
 
 ## command line execution
-```java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar [parameters]```
+```java -jar Helium-0.0.n-SNAPSHOT-jar-with-dependencies.jar [parameters]```
 
-```java -jar Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar 881958a095fffff```
+```java -jar Helium-0.0.n-SNAPSHOT-jar-with-dependencies.jar 881958a095fffff```
 
 ### More example parameters
 
