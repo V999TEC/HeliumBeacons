@@ -12,7 +12,11 @@ At least one hotspot beaconed three times in that period.
 
 
 ## Download
-https://github.com/V999TEC/HeliumBeacons/blob/main/download/Helium-0.0.1-SNAPSHOT-jar-with-dependencies.jar
+Select latest jar in this folder
+https://github.com/V999TEC/HeliumBeacons/blob/main/download/
+
+For example:
+https://github.com/V999TEC/HeliumBeacons/blob/main/download/Helium-0.0.5-SNAPSHOT-jar-with-dependencies.jar
 
 ## Parameters
 
